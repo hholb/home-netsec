@@ -25,7 +25,7 @@ def insert_adlist(domains: list[str])->int:
 
 
 def main():
-    filename = "pihole-adlist.txt"
+    filename = "adlist.txt"
 
     try:
         domains = parse_adlist(filename)
@@ -38,10 +38,9 @@ def main():
     try:
         inserts = insert_adlist(domains)
         print(f"Inserted {inserts} domains.")
-    except sqlite3.OperationalError as e:
+    except Exception as e:
         print(e)
-        print("Could not write to pihole database")
-        print("Try running as root")
+        print("Unable to add domians to database. Is pihole installed? Try running as root.")
         exit(1)
 
 

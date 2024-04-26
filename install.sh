@@ -18,7 +18,7 @@ else
 fi
 
 # update the adlists in the database
-if [[ -f "./pihole-adlist.txt" ]]; then
+if [[ -f "./adlist.txt" ]]; then
     echo "Updating adlist..."
     python3 update-adlist.py
 else
