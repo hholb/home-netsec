@@ -9,7 +9,7 @@ adds the domains listed in `adlist.txt` to the pihole's database.
 
 ### Download `phm`
 ``` shell
-curl https://raw.github.usercontent.com/hholb/phm/main/phm > phm
+curl https://raw.githubusercontent.com/hholb/phm/main/phm > phm
 ```
 
 ## Usage
