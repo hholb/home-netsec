@@ -37,7 +37,7 @@ def run_script(script: str, env: dict = {}) -> int:
     cmd = subprocess.run(["bash", "-c", script], env=env)
     return cmd.returncode
 
-def get_remote_file(url: str):
+def get_remote_file(url: str) -> str:
     print(f"Attempting to retrieve {url}...")
     try:
         response = requests.get(url)
@@ -71,19 +71,19 @@ def insert_adlist(database: str, urls: list[str])->int:
 def install_pihole(*args, **kwargs) -> int:
     print('Attempting to install Pi-Hole...')
     try:
-        env = {"PIHOLE_SKIP_OS_CHECK": true}
+        env = {"PIHOLE_SKIP_OS_CHECK": "true"}
         install = get_remote_file(INSTALL_FILENAME)
-        return run_script(install, env)
+        return run_script(script=install, env=env)
     except Exception as e:
         raise e
 
 
-def parse_adlist(filename: str):
+def parse_adlist(filename: str) -> list[str]:
     with open(filename, 'r') as f:
         return [line for line in f if line != '']
 
 
-def update_adlist(adlist: str = ADLIST_FILENAME):
+def update_adlist(adlist: str = ADLIST_FILENAME) -> int:
     print('Attempting to update Pi-Hole ad lists...')
     try:
         if adlist == ADLIST_FILENAME:
@@ -137,7 +137,7 @@ def main():
                 if output.returncode != 0:
                     # try pulling and running the pihole uninstall script
                     uninstaller = get_remote_file(UNINSTALL_FILENAME)
-                    status = run_script(uninstaller)
+                    status = run_script(script=uninstaller)
                     if status != 0:
                         raise Exception
             except Exception as e:
