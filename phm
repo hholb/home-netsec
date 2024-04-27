@@ -33,8 +33,8 @@ def testing_toggle(func):
     return run
 
 
-def run_script(script: str) -> int:
-    cmd = subprocess.run(["bash", "-c", script])
+def run_script(script: str, env: dict = {}) -> int:
+    cmd = subprocess.run(["bash", "-c", script], env=env)
     return cmd.returncode
 
 def get_remote_file(url: str):
@@ -71,8 +71,9 @@ def insert_adlist(database: str, urls: list[str])->int:
 def install_pihole(*args, **kwargs) -> int:
     print('Attempting to install Pi-Hole...')
     try:
+        env = {"PIHOLE_SKIP_OS_CHECK": true}
         install = get_remote_file(INSTALL_FILENAME)
-        return run_script(install)
+        return run_script(install, env)
     except Exception as e:
         raise e
 
