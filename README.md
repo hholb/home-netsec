@@ -3,20 +3,22 @@ This repository contains `phm`, a CLI tool for installing and updating the
 Pi-Hole. Under the hood, `phm` uses the [official Pi-Hole install](#TODO) script, then
 adds the domains listed in `adlist.txt` to the pihole's database.
 
-## Usage
+## Setup
+### Requirements
+- python3
 
 ### Download `phm`
 ``` shell
-curl -
-cd home-netsec
+curl https://raw.github.usercontent.com/hholb/phm/main/phm > phm
 ```
 
-### Run the setup script
+## Usage
+### Run `phm --help`
 ``` shell
-bash pihole-setup.sh
+./phm --help
 ```
 
 ### Check that the Pi-Hole is running
 ``` shell
-pihole status
+./phm status
 ```

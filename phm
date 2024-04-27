@@ -132,7 +132,7 @@ def main():
                 sys.exit(1)
         elif args.command == 'uninstall':
             try:
-                output = subprocess.run(["pihole","uninstall"], capture_output=True)
+                output = subprocess.run(["pihole","uninstall"])
                 if output.returncode != 0:
                     # try pulling and running the pihole uninstall script
                     uninstaller = get_remote_file(UNINSTALL_FILENAME)
