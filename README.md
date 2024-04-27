@@ -1,14 +1,13 @@
-# home-netsec
-This repository contains code for installing and configuring the
-Pi-Hole. It uses the [official Pi-Hole install](#TODO) script, then
-adds the domains listed in `pihole-adlist.txt` to the Pi-Hole
-database.
+# phm
+This repository contains `phm`, a CLI tool for installing and updating the
+Pi-Hole. Under the hood, `phm` uses the [official Pi-Hole install](#TODO) script, then
+adds the domains listed in `adlist.txt` to the pihole's database.
 
 ## Usage
 
-### Clone the repo
+### Download `phm`
 ``` shell
-git clone https://github.com/hholb/home-netsec.git
+curl -
 cd home-netsec
 ```
 

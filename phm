@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import sqlite3
+import subprocess
+import requests
+import sys
+
+
+INSTALL_FILENAME = "https://install.pi-hole.net"
+UNINSTALL_FILENAME = "https://uninstall.pi-hole.net"
+ADLIST_FILENAME = "https://raw.githubusercontent.com/hholb/home-netsec/main/adlist.txt"
+PI_HOLE_DATABASE = "/etc/pihole/gravity.db"
+
+
+def testing_toggle(func):
+    """
+    Decorator that toggles the database between the pihole database and in-memory.
+
+    Set PI_TESTING in the evironment to toggle testing on.
+
+    # Example
+    ```bash
+    PI_TESTING=1 python3 <thisscript.py>
+    ```
+    """
+    def run(*args, **kwargs):
+        if os.environ.get('PI_TESTING'):
+            kwargs['database'] = ":memory:"
+            func(*args, **kwargs)
+
+    return run
+
+
+def run_script(script: str) -> int:
+    cmd = subprocess.run(["bash", "-c", script])
+    return cmd.returncode
+
+def get_remote_file(url: str):
+    print(f"Attempting to retrieve {url}...")
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return(response.text)
+        else:
+            print(f"Status Code: {response.status_code}")
+            print(f"Failed to retrieve {url}.")
+    except Exception as  e:
+        print(e)
+        exit(1)
+
+
+@testing_toggle
+def insert_adlist(database: str, urls: list[str])->int:
+    num_inserts = 0
+    print(f"database: {database}")
+    with sqlite3.connect(database) as con:
+        try:
+            for url in urls:
+                cursor = con.cursor()
+                q = "INSERT OR IGNORE INTO adlist (address) VALUES (:address)"
+                url = {"address": url}
+                cursor.execute(q, url)
+                num_inserts += 1
+        except Exception as e:
+            raise e
+    return num_inserts
+
+
+def install_pihole(*args, **kwargs) -> int:
+    print('Attempting to install Pi-Hole...')
+    try:
+        install = get_remote_file(INSTALL_FILENAME)
+        return run_script(install)
+    except Exception as e:
+        raise e
+
+
+def parse_adlist(filename: str):
+    with open(filename, 'r') as f:
+        return [line for line in f if line != '']
+
+
+def update_adlist(adlist: str = ADLIST_FILENAME):
+    print('Attempting to update Pi-Hole ad lists...')
+    try:
+        if adlist == ADLIST_FILENAME:
+            ads = get_remote_file(adlist)
+            ad_urls = set(filter(lambda l: l != '', ads.split('\n')))
+        else:
+            ad_urls = parse_adlist(adlist)
+        return insert_adlist(database=PI_HOLE_DATABASE, urls=ad_urls)
+    except Exception as e:
+        raise e
+
+
+parser = argparse.ArgumentParser(
+        prog="phm",
+        description="phm - manage a pihole installation.",
+        epilog='by Hayden Holbrook <hholbroo@unca.edc>',
+)
+sub_parsers = parser.add_subparsers(title="Subcommands", metavar='', dest='command')
+
+install_parser = sub_parsers.add_parser('install', help="Install pihole")
+install_parser.add_argument('--adlist',
+                            type=str,
+                            default=ADLIST_FILENAME,
+                            action='store',
+                            help="override the default adlist.txt",)
+
+uninstall_parser = sub_parsers.add_parser('uninstall', help="Uninstall pihole")
+update_parser = sub_parsers.add_parser('update', help="Update pihole")
+status_parser = sub_parsers.add_parser('status', help="Show pihole status")
+
+
+def main():
+    args = parser.parse_args()
+    if len(sys.argv) < 2:
+        parser.print_help()
+    else:
+        if args.command == 'install':
+            num_added = 0
+            try:
+                if install_pihole() != 0:
+                   raise Exception
+                print("Pi-Hole Installed Succesfully!\n\n")
+                num_added += update_adlist(adlist=args.adlist) or 0
+                print(f"Added {num_added} ad lists to the Pi-Hole database.")
+            except Exception as e:
+                print(e)
+                sys.exit(1)
+        elif args.command == 'uninstall':
+            try:
+                output = subprocess.run(["pihole","uninstall"], capture_output=True)
+                if output.returncode != 0:
+                    # try pulling and running the pihole uninstall script
+                    uninstaller = get_remote_file(UNINSTALL_FILENAME)
+                    status = run_script(uninstaller)
+                    if status != 0:
+                        raise Exception
+            except Exception as e:
+                print(e)
+                print('Could not uninstall pihole. Is pihole installed?')
+                sys.exit(1)
+        elif args.command == 'update':
+            try:
+                num_added = update_adlist() or 0
+                print(f"Added {num_added} ad lists to the Pi-Hole database.")
+                output = subprocess.run(["pihole", "-up"])
+                if output.returncode != 0:
+                    raise Exception
+                output = subprocess.run(["pihole", "-g"])
+                if output.returncode != 0:
+                    raise Exception
+            except Exception as e:
+                print(e)
+                print('Could not update ad list database')
+                print("Is pihole installed? Try running as root.")
+                sys.exit(1)
+        elif args.command == 'status':
+            try:
+                output = subprocess.run(["pihole", "status"])
+                if output.returncode != 0:
+                    raise Exception
+            except Exception as e:
+                print(e)
+                print('Could not get pihole status. Is pihole installed?')
+                sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
