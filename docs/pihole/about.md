@@ -13,6 +13,8 @@ Without the IP address it is impossible to send requests to the ad
 server, effectively blocking the ad and stopping the sending of any
 tracking information.
 
+For more information, refer to the [Pi-Hole website](https://pi-hole.net).
+
 ## Why phm
 
 `phm` is part of cybersecurity project with the goal of researching
@@ -34,7 +36,13 @@ delegates the request to another DNS server and replies with the result.
 
 ### Technical Details
 
-#### DNS
+At the core of pihole is a server called FTLDNS. FTLDNS is a custom
+DNS server designed for high-performance with a light footprint, built
+on top of `dnsmasq`. FTLDNS handles resolving DNS requests, providing
+DHCP services, and blocking unwanted traffic. The list of domains that
+should be blocked is stored in a local database using SQLite3. FTLDNS
+provides an API for querying network data for analysis and
+statistics, which is where the web-interface gets its data.
 
 ## Why root
 
