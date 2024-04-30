@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "home-netsec"
+version = "0.1.0"
+description = ""
+authors = ["hholb <hholbroo@unca.edu>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+mkdocs-material = "^9.5.20"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

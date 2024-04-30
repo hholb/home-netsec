@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import pty
 import sqlite3
 import subprocess
 import requests
@@ -34,8 +35,23 @@ def testing_toggle(func):
 
 
 def run_script(script: str, env: dict = {}) -> int:
-    cmd = subprocess.run(["bash", "-c", script], env=env)
-    return cmd.returncode
+    master, slave = pty.openpty()
+    pid = os.fork()
+    if pid == 0:
+        try:
+            os.execv("/bin/bash", ["bash", "-c", script])
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                print("bash executable not found")
+            else:
+                print("Error:", e)
+            os._exit(1)
+    else:
+        _, status = os.waitpid(pid, 0)
+
+        os.close(master)
+        os.close(slave)
+        return status >> 8
 
 def get_remote_file(url: str) -> str:
     print(f"Attempting to retrieve {url}...")
@@ -103,6 +119,10 @@ parser = argparse.ArgumentParser(
 )
 sub_parsers = parser.add_subparsers(title="Subcommands", metavar='', dest='command')
 
+adlist_parser = sub_parsers.add_parser('add-adlist', help="Add ad lists to the pihole database")
+adlist_parser.add_argument('--adlist', type=str, default=None, action='store', help='ad list to add',)
+adlist_parser.add_argument('--no-update', help="add the urls to the database, but do not update the pihole")
+
 install_parser = sub_parsers.add_parser('install', help="Install pihole")
 install_parser.add_argument('--adlist',
                             type=str,
@@ -120,6 +140,20 @@ def main():
     if len(sys.argv) < 2:
         parser.print_help()
     else:
+        if args.command == 'add-adlist':
+            if args.adlist != None:
+                num_added = update_adlist(adlist=args.adlist) or 0;
+                if args.no_update:
+                    print(f"Added {num_added} ad lists to the Pi-Hole database.")
+                else:
+                    try:
+                        subprocess.run(["pihole", "-g"])
+                        print(f"Added {num_added} ad lists to the Pi-Hole database.")
+                    except Exception as e:
+                        print(e)
+                        print("Failed to update pihole database. Is pihole isntalled?")
+            else:
+                 print("No adlist provided.")
         if args.command == 'install':
             num_added = 0
             try:
@@ -147,7 +181,7 @@ def main():
         elif args.command == 'update':
             try:
                 num_added = update_adlist() or 0
-                print(f"Added {num_added} ad lists to the Pi-Hole database.")
+                print(f"Added {num_added} new  ad lists to the Pi-Hole database.")
                 output = subprocess.run(["pihole", "-up"])
                 if output.returncode != 0:
                     raise Exception
@@ -165,7 +199,6 @@ def main():
                 if output.returncode != 0:
                     raise Exception
             except Exception as e:
-                print(e)
                 print('Could not get pihole status. Is pihole installed?')
                 sys.exit(1)
 

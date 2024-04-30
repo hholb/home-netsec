@@ -5,49 +5,37 @@ needs to be run with root permissions. Find out more [here](about.md).
 
 The images below are from a new virtual machine running Ubuntu 24.04.
 
-# Requirements
+## Requirements
 - [Pi-Hole Supported Operating System](https://docs.pi-hole.net/main/prerequisites/#supported-operating-systems)
 - git
 - python
 
-# Install
+## Install
 
-##Clone the repository
+### Download the phm script
 ``` shell
-git clone https://github.com/hholb/home-netsec
-cd home-netsec
+curl -sSL https://raw.githubusercontent.com/hholb/phm/main/phm > phm
+chmod +x phm
 ```
 
-##Run the install script
+### Install pihole
 
-Run `install.sh`. It must be run as root for the Pi-Hole installer to
-work correctly.
 ``` shell
-sudo ./install.sh
+./phm install
 ```
 
-This downloads and runs the Pi-Hole installation script from the official Pi-Hole
-repository. It will ask you a few questions along the
-way. I will walk through each step below.
+This downloads and runs the officaial Pi-Hole installation script from
+the Pi-Hole repository. It will ask you a few questions along the
+way. See the [User Guide](user-guide.md) for more details.
 
-Move through the menu screens by pressing `Enter` or typing one of
-the highlighted characters. Move the cursor with the left and right
-arrow keys.
+## Uninstall
 
-Pi-Hole needs its host device IP address to be static for other devices on your
-network to reliably communicate with it.
-!!TODO
-
-# Uninstall
-
-Uninstall Pi-Hole
+### Uninstall Pi-Hole
 ``` shell
-sudo ./uninstall.sh
+./phm uninstall
 ```
 
-Remove this repository
-
+### Uninstall phm
 ``` shell
-cd ..
-rm -r home-netsec
+rm phm
 ```
