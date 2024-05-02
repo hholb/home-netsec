@@ -11,7 +11,7 @@ import sys
 
 INSTALL_FILENAME = "https://install.pi-hole.net"
 UNINSTALL_FILENAME = "https://uninstall.pi-hole.net"
-ADLIST_FILENAME = "https://raw.githubusercontent.com/hholb/home-netsec/main/adlist.txt"
+ADLIST_FILENAME = "https://raw.githubusercontent.com/hholb/phm/main/adlist.txt"
 PI_HOLE_DATABASE = "/etc/pihole/gravity.db"
 
 
