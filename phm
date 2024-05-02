@@ -67,20 +67,25 @@ def get_remote_file(url: str) -> str:
         exit(1)
 
 
-@testing_toggle
 def insert_adlist(database: str, urls: list[str])->int:
     num_inserts = 0
     print(f"database: {database}")
-    with sqlite3.connect(database) as con:
-        try:
-            for url in urls:
-                cursor = con.cursor()
-                q = "INSERT OR IGNORE INTO adlist (address) VALUES (:address)"
-                url = {"address": url}
-                cursor.execute(q, url)
-                num_inserts += 1
-        except Exception as e:
-            raise e
+    try:
+        with sqlite3.connect(database) as con:
+            try:
+                for url in urls:
+                    print(f"Inserting: {url}")
+                    cursor = con.cursor()
+                    q = "INSERT OR IGNORE INTO adlist (address) VALUES (:address)"
+                    url = {"address": url}
+                    cursor.execute(q, url)
+                    num_inserts += 1
+            except Exception as e:
+                raise e
+    except Exception as e:
+        print(e)
+        print("Failed to write to pihole database. Try running as root.")
+        raise e
     return num_inserts
 
 
@@ -96,7 +101,7 @@ def install_pihole(*args, **kwargs) -> int:
 
 def parse_adlist(filename: str) -> list[str]:
     with open(filename, 'r') as f:
-        return [line for line in f if line != '']
+        return [line.removesuffix('\n') for line in f if line != '']
 
 
 def update_adlist(adlist: str = ADLIST_FILENAME) -> int:
@@ -147,8 +152,8 @@ def main():
                     print(f"Added {num_added} ad lists to the Pi-Hole database.")
                 else:
                     try:
-                        subprocess.run(["pihole", "-g"])
                         print(f"Added {num_added} ad lists to the Pi-Hole database.")
+                        subprocess.run(["pihole", "-g"])
                     except Exception as e:
                         print(e)
                         print("Failed to update pihole database. Is pihole isntalled?")
@@ -162,6 +167,7 @@ def main():
                 print("Pi-Hole Installed Succesfully!\n\n")
                 num_added += update_adlist(adlist=args.adlist) or 0
                 print(f"Added {num_added} ad lists to the Pi-Hole database.")
+                subprocess.run(["pihole", "-g"])
             except Exception as e:
                 print(e)
                 sys.exit(1)
